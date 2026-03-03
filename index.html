@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Reservas | Europcar Ecuador</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background-color: #f4f7f6; margin: 0; padding: 20px; }
+        .container { max-width: 1300px; margin: auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); border-top: 5px solid #008542; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        .logo { background: #008542; color: white; padding: 10px 20px; font-weight: bold; border-radius: 6px; }
+        
+        table { width: 100%; border-collapse: collapse; display: none; }
+        thead { background: #008542; color: white; }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #eee; font-size: 13px; }
+        
+        .booking-id { font-family: 'Consolas', monospace; font-weight: bold; color: #008542; }
+        .req-tag { background: #e8f5e9; color: #1b5e20; padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 11px; }
+        
+        .loader { text-align: center; padding: 40px; font-weight: bold; color: #008542; }
+        #error-msg { display: none; color: #721c24; background: #f8d7da; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #f5c6cb; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <div>
+            <h1 style="margin:0;">Gestión de Requerimientos</h1>
+            <p id="status" style="margin:5px 0 0; color: #666;">Cargando base de datos...</p>
+        </div>
+        <div class="logo">EUROPCAR</div>
+    </div>
+
+    <div id="error-msg"></div>
+    <div id="loader" class="loader">⏳ Conectando con Google Sheets...</div>
+
+    <table id="tablaReservas">
+        <thead>
+            <tr>
+                <th>No.</th>
+                <th>Booking Number</th>
+                <th>Name</th>
+                <th>Requirement</th>
+                <th>Description</th>
+            </tr>
+        </thead>
+        <tbody id="cuerpoTabla"></tbody>
+    </table>
+</div>
+
+<script>
+    const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSzC5OL79p1MJZoel12enc4w9G12hbsd_qICkbeE7N-pDdLqCh2gEuuwc3NbaI_820chNyjcifqVdJj/pub?gid=0&single=true&output=csv';
+
+    async function cargarDatos() {
+        const loader = document.getElementById('loader');
+        const tabla = document.getElementById('tablaReservas');
+        const cuerpo = document.getElementById('cuerpoTabla');
+        const status = document.getElementById('status');
+        const errorDiv = document.getElementById('error-msg');
+
+        try {
+            const response = await fetch(SHEET_URL + '&t=' + Date.now());
+            const rawText = await response.text();
+            const filas = rawText.split(/\r?\n/).filter(f => f.trim() !== "");
+
+            // Buscamos los encabezados
+            const headers = filas[0].split(',').map(h => h.trim().toUpperCase().replace(/"/g, ''));
+            
+            // Buscamos las posiciones de las columnas
+            const iNo = headers.indexOf("NO.");
+            const iBooking = headers.indexOf("BOOKING NUMBER");
+            const iName = headers.indexOf("NAME");
+            const iType = headers.indexOf("TYPE OF REQUIREMENT");
+            const iDesc = headers.indexOf("DESCRIPTION");
+
+            // Si no encuentra alguna columna vital, avisamos
+            if (iBooking === -1 || iType === -1) {
+                throw new Error("No se encontraron las columnas exactas. Revisa que en el Excel digan: NO. , BOOKING NUMBER , NAME , TYPE OF REQUIREMENT , DESCRIPTION");
+            }
+
+            cuerpo.innerHTML = "";
+
+            for (let i = 1; i < filas.length; i++) {
+                const cols = filas[i].match(/(".*?"|[^",]+)(?=\s*,|\s*$)/g);
+                
+                if (cols) {
+                    const clean = (t) => (t || "").replace(/^"|"$/g, '').trim();
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${clean(cols[iNo]) || i}</td>
+                        <td class="booking-id">${clean(cols[iBooking])}</td>
+                        <td><strong>${clean(cols[iName])}</strong></td>
+                        <td><span class="req-tag">${clean(cols[iType])}</span></td>
+                        <td style="color:#666; font-size:12px;">${clean(cols[iDesc]) || '---'}</td>
+                    `;
+                    cuerpo.appendChild(tr);
+                }
+            }
+
+            loader.style.display = 'none';
+            tabla.style.display = 'table';
+            status.innerText = "Sincronizado: " + (filas.length - 1) + " registros encontrados.";
+
+        } catch (err) {
+            loader.style.display = 'none';
+            errorDiv.style.display = 'block';
+            errorDiv.innerHTML = "<b>⚠️ Error:</b> " + err.message;
+            status.innerText = "Error de sincronización.";
+        }
+    }
+
+    window.onload = cargarDatos;
+</script>
+</body>
+</html>
