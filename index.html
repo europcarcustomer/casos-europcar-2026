@@ -3,46 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Europcar Dashboard | Oficial</title>
+    <title>Europcar | Análisis 2026</title>
     <style>
         body { font-family: 'Segoe UI', sans-serif; background-color: #f4f7f6; margin: 0; padding: 20px; }
         .container { max-width: 1400px; margin: auto; display: grid; grid-template-columns: 1fr 340px; gap: 20px; }
-        
-        /* Header Mejorado */
-        .header { 
-            grid-column: 1 / span 2; 
-            background: white; 
-            padding: 15px 25px; 
-            border-radius: 12px; 
-            box-shadow: 0 4px 10px rgba(0,0,0,0.05); 
-            border-top: 5px solid #008542; 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-        }
-        .logo-europcar { 
-            background: #008542; 
-            color: white; 
-            padding: 8px 25px; 
-            border-radius: 6px; 
-            font-weight: 900; 
-            letter-spacing: 1px;
-            font-size: 18px;
-        }
-
+        .header { grid-column: 1 / span 2; background: white; padding: 15px 25px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border-top: 5px solid #008542; display: flex; justify-content: space-between; align-items: center; }
+        .logo-europcar { background: #008542; color: white; padding: 8px 25px; border-radius: 6px; font-weight: 900; letter-spacing: 1px; font-size: 18px; }
         .main-content { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); overflow-x: auto; }
         table { width: 100%; border-collapse: collapse; }
         th { background-color: #008542; color: white; padding: 12px; text-align: left; font-size: 13px; }
         td { padding: 10px; border-bottom: 1px solid #eee; font-size: 13px; }
-        
         .sidebar { background: #008542; color: white; padding: 25px; border-radius: 15px; height: fit-content; position: sticky; top: 20px; }
         .stat-card { background: rgba(255,255,255,0.15); margin-bottom: 10px; padding: 15px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; }
         .stat-number { font-size: 22px; font-weight: bold; }
         .total-card { background: white; color: #008542; margin-top: 15px; font-weight: bold; }
-        
         .analysis-box { background: rgba(0,0,0,0.2); border-radius: 10px; padding: 15px; margin-top: 20px; }
         .analysis-item { display: flex; justify-content: space-between; font-size: 12px; border-bottom: 1px solid rgba(255,255,255,0.1); padding: 5px 0; }
-        
         .tag { padding: 5px 10px; border-radius: 4px; font-size: 10px; font-weight: bold; text-transform: uppercase; }
         .tag-requirement { background: #e3f2fd; color: #1976d2; }
         .tag-complaint { background: #ffebee; color: #c62828; }
@@ -54,7 +30,7 @@
 
 <div class="container">
     <div class="header">
-        <h1 style="margin:0; font-size: 24px; color: #333;">Analisis de Casos año 2026</h1>
+        <h1 style="margin:0; font-size: 24px; color: #333;">ANÁLISIS DE CASOS AÑO 2026</h1>
         <div class="logo-europcar">EUROPCAR</div>
     </div>
 
@@ -114,7 +90,9 @@
             const res = await fetch(`${URL}&t=${Date.now()}`);
             const csv = await res.text();
             const filas = csv.split(/\r?\n/).filter(f => f.trim() !== "");
-            const encabezados = splitCSV(filas[0]).map(h => h.toUpperCase().replace(/"/g, ''));
+            
+            // Limpiar encabezados y encontrar índices exactos
+            const encabezados = splitCSV(filas[0]).map(h => h.toUpperCase().replace(/"/g, '').trim());
             
             const iMes = encabezados.indexOf("MONTH");
             const iBook = encabezados.indexOf("BOOKING NUMBER");
@@ -124,27 +102,31 @@
 
             database = filas.slice(1).map(f => {
                 const c = splitCSV(f);
-                const cl = (v) => (v || "").replace(/^"|"$/g, '').trim();
+                const cl = (idx) => (c[idx] || "").replace(/^"|"$/g, '').trim();
                 return {
-                    mes: cl(c[iMes]),
-                    book: cl(c[iBook]),
-                    name: cl(c[iName]),
-                    type: cl(c[iType]),
-                    desc: cl(c[iDesc])
+                    mes: cl(iMes),
+                    book: cl(iBook),
+                    name: cl(iName),
+                    type: cl(iType),
+                    desc: cl(iDesc)
                 };
-            });
+            }).filter(d => d.mes && d.mes !== "" && d.mes !== "MONTH");
 
+            // Crear lista de meses única para el selector
             const select = document.getElementById('filtroMes');
-            const meses = [...new Set(database.map(d => d.mes))].filter(m => m && m.length < 20);
+            const mesesValidos = ["JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE", "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"];
+            const mesesEncontrados = [...new Set(database.map(d => d.mes.toUpperCase()))]
+                                     .filter(m => mesesValidos.includes(m));
+            
             select.innerHTML = '<option value="TODOS">TODO EL AÑO</option>';
-            meses.sort().forEach(m => {
+            mesesEncontrados.sort((a, b) => mesesValidos.indexOf(a) - mesesValidos.indexOf(b)).forEach(m => {
                 const opt = document.createElement('option');
                 opt.value = m; opt.innerText = m;
                 select.appendChild(opt);
             });
 
             renderizar();
-        } catch (e) { console.error(e); }
+        } catch (e) { console.error("Error cargando datos:", e); }
     }
 
     function renderizar() {
@@ -158,7 +140,7 @@
         let motivos = {};
 
         database.forEach(d => {
-            if (filtro === "TODOS" || d.mes === filtro) {
+            if (filtro === "TODOS" || d.mes.toUpperCase() === filtro) {
                 const t = (d.type || "").toUpperCase();
                 let cls = "tag-requirement";
                 
@@ -188,14 +170,10 @@
 
         const sortedMotivos = Object.entries(motivos).sort((a,b) => b[1] - a[1]).slice(0, 5);
         if (sortedMotivos.length === 0) {
-            motivosDiv.innerHTML = '<div style="font-size:11px; opacity:0.7;">No hay quejas en este periodo.</div>';
+            motivosDiv.innerHTML = '<div style="font-size:11px; opacity:0.7;">No hay quejas.</div>';
         } else {
             sortedMotivos.forEach(([motivo, total]) => {
-                motivosDiv.innerHTML += `
-                    <div class="analysis-item">
-                        <span>${motivo}</span>
-                        <span style="font-weight:bold;">${total}</span>
-                    </div>`;
+                motivosDiv.innerHTML += `<div class="analysis-item"><span>${motivo}</span><span style="font-weight:bold;">${total}</span></div>`;
             });
         }
     }
@@ -203,3 +181,4 @@
 </script>
 </body>
 </html>
+
