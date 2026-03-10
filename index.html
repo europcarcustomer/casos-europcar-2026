@@ -1,184 +1,204 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Europcar | Análisis 2026</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background-color: #f4f7f6; margin: 0; padding: 20px; }
-        .container { max-width: 1400px; margin: auto; display: grid; grid-template-columns: 1fr 340px; gap: 20px; }
-        .header { grid-column: 1 / span 2; background: white; padding: 15px 25px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border-top: 5px solid #008542; display: flex; justify-content: space-between; align-items: center; }
-        .logo-europcar { background: #008542; color: white; padding: 8px 25px; border-radius: 6px; font-weight: 900; letter-spacing: 1px; font-size: 18px; }
-        .main-content { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; }
-        th { background-color: #008542; color: white; padding: 12px; text-align: left; font-size: 13px; }
-        td { padding: 10px; border-bottom: 1px solid #eee; font-size: 13px; }
-        .sidebar { background: #008542; color: white; padding: 25px; border-radius: 15px; height: fit-content; position: sticky; top: 20px; }
-        .stat-card { background: rgba(255,255,255,0.15); margin-bottom: 10px; padding: 15px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; }
-        .stat-number { font-size: 22px; font-weight: bold; }
-        .total-card { background: white; color: #008542; margin-top: 15px; font-weight: bold; }
-        .analysis-box { background: rgba(0,0,0,0.2); border-radius: 10px; padding: 15px; margin-top: 20px; }
-        .analysis-item { display: flex; justify-content: space-between; font-size: 12px; border-bottom: 1px solid rgba(255,255,255,0.1); padding: 5px 0; }
-        .tag { padding: 5px 10px; border-radius: 4px; font-size: 10px; font-weight: bold; text-transform: uppercase; }
-        .tag-requirement { background: #e3f2fd; color: #1976d2; }
-        .tag-complaint { background: #ffebee; color: #c62828; }
-        .tag-congrats { background: #e8f5e9; color: #2e7d32; }
-        select { width: 100%; padding: 12px; border-radius: 8px; border: none; font-weight: bold; color: #008542; margin-bottom: 20px; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: linear-gradient(135deg, #d4e4d0 0%, #f4f7f6 100%); margin: 0; min-height: 100vh; }
+        .header { background: #ffffff; padding: 10px 40px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.1); border-bottom: 4px solid #008542; margin-bottom: 25px; }
+        .main-container { max-width: 1400px; margin: auto; padding: 0 20px 20px 20px; display: grid; grid-template-columns: 1fr 320px; gap: 20px; }
+        .charts-container { grid-column: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .chart-box { background: rgba(255, 255, 255, 0.8); padding: 20px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); height: 280px; }
+        .sidebar { display: flex; flex-direction: column; gap: 15px; }
+        .main-stats { background: #008542; padding: 25px; border-radius: 20px; color: white; }
+        .total-display { text-align: center; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 10px; }
+        .total-number { font-size: 48px; font-weight: 900; display: block; }
+        .stat-card { padding: 12px; border-radius: 10px; display: flex; justify-content: space-between; background: rgba(255,255,255,0.1); margin-bottom: 8px; font-weight: bold; }
+        .impact-box { background: white; padding: 20px; border-radius: 15px; border-left: 5px solid #c62828; color: #333; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .impact-value { font-size: 38px; font-weight: 900; color: #c62828; display: block; }
+        .escalation-container { background: #c62828; padding: 15px; border-radius: 15px; color: white; text-align: center; }
+        select { width: 100%; padding: 10px; border-radius: 8px; border: none; font-weight: bold; color: #008542; margin-bottom: 15px; cursor: pointer; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <div class="header">
-        <h1 style="margin:0; font-size: 24px; color: #333;">ANÁLISIS DE CASOS AÑO 2026</h1>
-        <div class="logo-europcar">EUROPCAR</div>
-    </div>
+<div class="header">
+    <div style="color:#008542; font-weight:900; font-size:24px;">Europcar</div>
+    <div style="color:#008542; font-weight:800; text-transform:uppercase;">Customer Service Dashboard</div>
+</div>
 
-    <div class="main-content">
-        <table id="tablaDatos">
-            <thead>
-                <tr>
-                    <th>Mes</th>
-                    <th>Booking</th>
-                    <th>Nombre</th>
-                    <th>Tipo</th>
-                    <th>Descripción</th>
-                </tr>
-            </thead>
-            <tbody id="cuerpoTabla"></tbody>
-        </table>
+<div class="main-container">
+    <div class="charts-container">
+        <div class="chart-box"><canvas id="canvasPie"></canvas></div>
+        <div class="chart-box"><canvas id="canvasBar"></canvas></div>
+        <div class="chart-box"><canvas id="canvasAgency"></canvas></div>
+        <div class="chart-box"><canvas id="canvasExtra"></canvas></div>
     </div>
 
     <aside class="sidebar">
-        <h3>Filtrar por Mes</h3>
-        <select id="filtroMes" onchange="renderizar()"></select>
+        <div class="main-stats">
+            <div class="total-display">
+                <span style="font-size: 11px; opacity: 0.8; letter-spacing: 1px;">TOTAL CASES</span>
+                <span id="total-casos" class="total-number">0</span>
+            </div>
+            <select id="filtroMes" onchange="renderizar()"></select>
+            <div class="stat-card"><span>CLAIMS</span><span id="count-comp">0</span></div>
+            <div class="stat-card"><span>REQUIREMENTS</span><span id="count-req">0</span></div>
+            <div class="stat-card"><span>CONGRATS</span><span id="count-cong">0</span></div>
+        </div>
 
-        <h3>Resumen Mensual</h3>
-        <div class="stat-card"><span>Requirements</span><span id="count-req" class="stat-number">0</span></div>
-        <div class="stat-card"><span>Complaints</span><span id="count-comp" class="stat-number">0</span></div>
-        <div class="stat-card"><span>Congrats</span><span id="count-cong" class="stat-number">0</span></div>
-        <div class="stat-card total-card"><span>TOTAL CASOS</span><span id="count-total" class="stat-number">0</span></div>
+        <div class="impact-box">
+            <span style="font-size: 11px; font-weight: bold; color: #666; text-transform: uppercase;">Impact of Complaints</span>
+            <span id="impacto-valor" class="impact-value">0%</span>
+            <span id="impacto-mes" style="font-size: 12px; color: #888;">Dato de -</span>
+        </div>
 
-        <div class="analysis-box">
-            <h4 style="margin-top:0; border-bottom: 1px solid white; padding-bottom: 5px;">Top Motivos Quejas</h4>
-            <div id="motivos-list"></div>
+        <div class="escalation-container">
+            <strong>ESCALATION: </strong><span id="count-esc" style="font-size: 24px;">0</span>
         </div>
     </aside>
 </div>
 
 <script>
-    const URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSzC5OL79p1MJZoel12enc4w9G12hbsd_qICkbeE7N-pDdLqCh2gEuuwc3NbaI_820chNyjcifqVdJj/pub?gid=0&single=true&output=csv';
-    let database = [];
+    const URL1 = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSzC5OL79p1MJZoel12enc4w9G12hbsd_qICkbeE7N-pDdLqCh2gEuuwc3NbaI_820chNyjcifqVdJj/pub?gid=0&single=true&output=csv';
+    const URL2 = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSzC5OL79p1MJZoel12enc4w9G12hbsd_qICkbeE7N-pDdLqCh2gEuuwc3NbaI_820chNyjcifqVdJj/pub?gid=397203880&single=true&output=csv';
 
-    function splitCSV(row) {
-        const result = [];
-        let current = '';
-        let inQuotes = false;
-        for (let char of row) {
-            if (char === '"') inQuotes = !inQuotes;
-            else if (char === ',' && !inQuotes) {
-                result.push(current.trim());
-                current = '';
-            } else current += char;
-        }
-        result.push(current.trim());
-        return result;
-    }
+    let db1 = [], db2 = [], charts = {};
+    const dictMes = { "ENERO": "JANUARY", "FEBRERO": "FEBRUARY", "MARZO": "MARCH", "ABRIL": "APRIL", "MAYO": "MAY", "JUNIO": "JUNE", "JULIO": "JULY", "AGOSTO": "AUGUST", "SEPTIEMBRE": "SEPTEMBER", "OCTUBRE": "OCTOBER", "NOVIEMBRE": "NOVEMBER", "DICIEMBRE": "DECEMBER" };
 
     async function cargar() {
         try {
-            const res = await fetch(`${URL}&t=${Date.now()}`);
-            const csv = await res.text();
-            const filas = csv.split(/\r?\n/).filter(f => f.trim() !== "");
-            
-            // Limpiar encabezados y encontrar índices exactos
-            const encabezados = splitCSV(filas[0]).map(h => h.toUpperCase().replace(/"/g, '').trim());
-            
-            const iMes = encabezados.indexOf("MONTH");
-            const iBook = encabezados.indexOf("BOOKING NUMBER");
-            const iName = encabezados.indexOf("NAME");
-            const iType = encabezados.indexOf("TYPE OF REQUIREMENT");
-            const iDesc = encabezados.indexOf("DESCRIPTION");
+            const [r1, r2] = await Promise.all([
+                fetch(`${URL1}&t=${Date.now()}`).then(res => res.text()),
+                fetch(`${URL2}&t=${Date.now()}`).then(res => res.text())
+            ]);
+            db1 = parseCSV(r1);
+            db2 = parseHoja2(r2);
 
-            database = filas.slice(1).map(f => {
-                const c = splitCSV(f);
-                const cl = (idx) => (c[idx] || "").replace(/^"|"$/g, '').trim();
-                return {
-                    mes: cl(iMes),
-                    book: cl(iBook),
-                    name: cl(iName),
-                    type: cl(iType),
-                    desc: cl(iDesc)
-                };
-            }).filter(d => d.mes && d.mes !== "" && d.mes !== "MONTH");
-
-            // Crear lista de meses única para el selector
             const select = document.getElementById('filtroMes');
-            const mesesValidos = ["JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE", "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"];
-            const mesesEncontrados = [...new Set(database.map(d => d.mes.toUpperCase()))]
-                                     .filter(m => mesesValidos.includes(m));
+            const mesesOrden = ["JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE", "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"];
+            const mesesPresentes = [...new Set(db1.map(d => d.MONTH))].filter(m => mesesOrden.includes(m));
             
-            select.innerHTML = '<option value="TODOS">TODO EL AÑO</option>';
-            mesesEncontrados.sort((a, b) => mesesValidos.indexOf(a) - mesesValidos.indexOf(b)).forEach(m => {
-                const opt = document.createElement('option');
-                opt.value = m; opt.innerText = m;
-                select.appendChild(opt);
+            select.innerHTML = '<option value="ALL">ALL MONTHS</option>';
+            mesesPresentes.sort((a,b) => mesesOrden.indexOf(a) - mesesOrden.indexOf(b)).forEach(m => {
+                select.innerHTML += `<option value="${m}">${m}</option>`;
             });
-
             renderizar();
-        } catch (e) { console.error("Error cargando datos:", e); }
+        } catch(e) { console.error("Error:", e); }
+    }
+
+    function parseCSV(text) {
+        const rows = text.split(/\r?\n/).filter(l => l.trim() !== "");
+        const h = rows[0].split(',').map(header => header.trim().toUpperCase());
+        return rows.slice(1).map(row => {
+            const c = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+            let obj = {};
+            h.forEach((name, i) => obj[name] = (c[i] || "").replace(/"/g, "").trim());
+            return obj;
+        });
+    }
+
+    function parseHoja2(text) {
+        const rows = text.split(/\r?\n/).filter(l => l.trim() !== "");
+        let headerIdx = rows.findIndex(r => r.toUpperCase().includes("MES 2026"));
+        if (headerIdx === -1) return [];
+
+        return rows.slice(headerIdx + 1).map(row => {
+            const cells = row.split(',').map(c => c.replace(/"/g, "").trim());
+            let mesEsp = cells[0].toUpperCase();
+            
+            let percentIdx = cells.findIndex(c => c.includes('%'));
+            let valorFinal = "0%";
+
+            if (percentIdx > 0) {
+                if (!isNaN(cells[percentIdx-1]) && cells[percentIdx-1] !== "") {
+                    valorFinal = cells[percentIdx-1] + "," + cells[percentIdx];
+                } else {
+                    valorFinal = cells[percentIdx];
+                }
+            }
+            
+            return {
+                mesEng: dictMes[mesEsp] || mesEsp,
+                valor: valorFinal
+            };
+        }).filter(d => d.mesEng);
     }
 
     function renderizar() {
         const filtro = document.getElementById('filtroMes').value;
-        const cuerpo = document.getElementById('cuerpoTabla');
-        const motivosDiv = document.getElementById('motivos-list');
-        cuerpo.innerHTML = "";
-        motivosDiv.innerHTML = "";
-        
-        let c = { req: 0, comp: 0, cong: 0 };
-        let motivos = {};
+        let c = { total: 0, comp: 0, req: 0, cong: 0, esc: 0 };
+        let dataQ = {}, dataE = {}, dataA = {};
 
-        database.forEach(d => {
-            if (filtro === "TODOS" || d.mes.toUpperCase() === filtro) {
-                const t = (d.type || "").toUpperCase();
-                let cls = "tag-requirement";
-                
-                if (t.includes("COMPLAINT")) { 
-                    c.comp++; 
-                    cls = "tag-complaint";
-                    const desc = d.desc || "Sin descripción";
-                    motivos[desc] = (motivos[desc] || 0) + 1;
-                }
-                else if (t.includes("CONGRATS")) { c.cong++; cls = "tag-congrats"; }
-                else if (t.includes("REQUIREMENT")) { c.req++; }
-
-                cuerpo.innerHTML += `<tr>
-                    <td>${d.mes}</td>
-                    <td style="font-weight:bold; color:#008542">${d.book}</td>
-                    <td>${d.name}</td>
-                    <td><span class="tag ${cls}">${d.type || 'N/A'}</span></td>
-                    <td>${d.desc || ''}</td>
-                </tr>`;
+        db1.forEach(d => {
+            if (filtro === "ALL" || d.MONTH === filtro) {
+                c.total++;
+                if (["SI", "YES", "X"].includes((d.ESCALATION || "").toUpperCase())) c.esc++;
+                const tipo = (d["TYPE OF REQUIREMENT"] || "").toUpperCase();
+                if (tipo.includes("COMPLAINT")) {
+                    c.comp++;
+                    dataA[d.AGENCY] = (dataA[d.AGENCY] || 0) + 1;
+                    let extra = (d["EXTRA CHARGE"] || "").toUpperCase();
+                    if (extra && extra !== "-") {
+                        dataE[extra] = (dataE[extra] || 0) + 1;
+                        dataQ["Extra Charge"] = (dataQ["Extra Charge"] || 0) + 1;
+                    } else {
+                        let mot = d.DESCRIPTION || "Info";
+                        if (mot.toUpperCase() !== "EXTRA CHARGE") dataQ[mot] = (dataQ[mot] || 0) + 1;
+                    }
+                } else if (tipo.includes("CONGRATS")) c.cong++;
+                else c.req++;
             }
         });
 
-        document.getElementById('count-req').innerText = c.req;
-        document.getElementById('count-comp').innerText = c.comp;
-        document.getElementById('count-cong').innerText = c.cong;
-        document.getElementById('count-total').innerText = c.req + c.comp + c.cong;
-
-        const sortedMotivos = Object.entries(motivos).sort((a,b) => b[1] - a[1]).slice(0, 5);
-        if (sortedMotivos.length === 0) {
-            motivosDiv.innerHTML = '<div style="font-size:11px; opacity:0.7;">No hay quejas.</div>';
-        } else {
-            sortedMotivos.forEach(([motivo, total]) => {
-                motivosDiv.innerHTML += `<div class="analysis-item"><span>${motivo}</span><span style="font-weight:bold;">${total}</span></div>`;
-            });
+        let impactoUI = "0%";
+        if (filtro !== "ALL") {
+            const match = db2.find(d => d.mesEng === filtro);
+            if (match) impactoUI = match.valor;
         }
+
+        document.getElementById('total-casos').innerText = c.total;
+        document.getElementById('count-comp').innerText = c.comp;
+        document.getElementById('count-req').innerText = c.req;
+        document.getElementById('count-cong').innerText = c.cong;
+        document.getElementById('count-esc').innerText = c.esc;
+        document.getElementById('impacto-valor').innerText = impactoUI;
+        document.getElementById('impacto-mes').innerText = `Dato de ${filtro}`;
+
+        updateCharts(c, dataQ, dataE, dataA);
+    }
+
+    function updateCharts(c, dataQ, dataE, dataA) {
+        Object.values(charts).forEach(ch => ch.destroy());
+        const style = { color: '#444', font: { size: 13, weight: 'bold' } };
+        const hide = { grid: { display: false }, ticks: { display: false }, border: { display: false } };
+
+        charts.pie = new Chart(document.getElementById('canvasPie'), {
+            type: 'doughnut',
+            data: { labels: ['Claims', 'Requirements', 'Congrats'], datasets: [{ data: [c.comp, c.req, c.cong], backgroundColor: ['#c62828', '#1976d2', '#2e7d32'] }] },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { title: { display: true, text: 'GENERAL STATUS', ...style } } }
+        });
+
+        const topQ = Object.entries(dataQ).sort((a,b)=>b[1]-a[1]).slice(0,5);
+        charts.bar = new Chart(document.getElementById('canvasBar'), {
+            type: 'bar',
+            data: { labels: topQ.map(m=>m[0]), datasets: [{ data: topQ.map(m=>m[1]), backgroundColor: '#c62828' }] },
+            options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, title: { display: true, text: 'TOP REASONS', ...style } }, scales: { x: hide, y: { grid: { display: false } } } }
+        });
+
+        charts.agency = new Chart(document.getElementById('canvasAgency'), {
+            type: 'bar',
+            data: { labels: Object.keys(dataA), datasets: [{ data: Object.values(dataA), backgroundColor: '#1976d2' }] },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, title: { display: true, text: 'CLAIMS BY AGENCY', ...style } }, scales: { x: { grid: { display: false } }, y: hide } }
+        });
+
+        charts.extra = new Chart(document.getElementById('canvasExtra'), {
+            type: 'bar',
+            data: { labels: Object.keys(dataE), datasets: [{ data: Object.values(dataE), backgroundColor: '#008542' }] },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, title: { display: true, text: 'EXTRA CHARGE DETAILS', ...style } }, scales: { x: { grid: { display: false } }, y: hide } }
+        });
     }
     window.onload = cargar;
 </script>
 </body>
 </html>
-
