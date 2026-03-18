@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
     <style>
         body { font-family: 'Segoe UI', Arial, sans-serif; background: linear-gradient(135deg, #d4e4d0 0%, #f4f7f6 100%); margin: 0; min-height: 100vh; }
         .header { background: #ffffff; padding: 10px 40px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.1); border-bottom: 4px solid #008542; margin-bottom: 25px; }
@@ -65,6 +66,8 @@
 
     let db1 = [], db2 = [], charts = {};
     const dictMes = { "ENERO": "JANUARY", "FEBRERO": "FEBRUARY", "MARZO": "MARCH", "ABRIL": "APRIL", "MAYO": "MAY", "JUNIO": "JUNE", "JULIO": "JULY", "AGOSTO": "AUGUST", "SEPTIEMBRE": "SEPTEMBER", "OCTUBRE": "OCTOBER", "NOVIEMBRE": "NOVEMBER", "DICIEMBRE": "DECEMBER" };
+
+    Chart.register(ChartDataLabels);
 
     async function cargar() {
         try {
@@ -143,15 +146,11 @@
                         dataE[extra] = (dataE[extra] || 0) + 1;
                         dataQ["Extra Charge"] = (dataQ["Extra Charge"] || 0) + 1;
                     } else {
-                        // LOGICA PARA UNIFICAR INFO E INFORMATION
                         let mot = d.DESCRIPTION || "Information";
                         let motNormalizado = mot.trim();
-                        
-                        // Si es "Info" o "Information" (sin importar mayúsculas), lo forzamos a "Information"
                         if (motNormalizado.toUpperCase() === "INFO" || motNormalizado.toUpperCase() === "INFORMATION") {
                             motNormalizado = "Information";
                         }
-
                         if (motNormalizado.toUpperCase() !== "EXTRA CHARGE") {
                             dataQ[motNormalizado] = (dataQ[motNormalizado] || 0) + 1;
                         }
@@ -182,30 +181,71 @@
         Object.values(charts).forEach(ch => ch.destroy());
         const style = { color: '#444', font: { size: 13, weight: 'bold' } };
         const hide = { grid: { display: false }, ticks: { display: false }, border: { display: false } };
+        
+        // Ajuste de padding para que los números tengan espacio a los lados
+        const layoutPadding = { right: 35, left: 10, top: 20, bottom: 10 };
 
         charts.pie = new Chart(document.getElementById('canvasPie'), {
             type: 'doughnut',
             data: { labels: ['Claims', 'Requirements', 'Congrats'], datasets: [{ data: [c.comp, c.req, c.cong], backgroundColor: ['#c62828', '#1976d2', '#2e7d32'] }] },
-            options: { responsive: true, maintainAspectRatio: false, plugins: { title: { display: true, text: 'GENERAL STATUS', ...style } } }
+            options: { 
+                responsive: true, 
+                maintainAspectRatio: false, 
+                plugins: { 
+                    title: { display: true, text: 'GENERAL STATUS', ...style },
+                    datalabels: { color: '#fff', font: { weight: 'bold', size: 14 } }
+                } 
+            }
         });
 
         const topQ = Object.entries(dataQ).sort((a,b)=>b[1]-a[1]).slice(0,5);
         charts.bar = new Chart(document.getElementById('canvasBar'), {
             type: 'bar',
             data: { labels: topQ.map(m=>m[0]), datasets: [{ data: topQ.map(m=>m[1]), backgroundColor: '#c62828' }] },
-            options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, title: { display: true, text: 'TOP REASONS', ...style } }, scales: { x: hide, y: { grid: { display: false } } } }
+            options: { 
+                indexAxis: 'y', 
+                responsive: true, 
+                maintainAspectRatio: false,
+                layout: { padding: layoutPadding },
+                plugins: { 
+                    legend: { display: false }, 
+                    title: { display: true, text: 'TOP REASONS', ...style },
+                    datalabels: { anchor: 'end', align: 'right', offset: 5, color: '#444', font: { weight: 'bold', size: 12 } }
+                }, 
+                scales: { x: hide, y: { grid: { display: false } } } 
+            }
         });
 
         charts.agency = new Chart(document.getElementById('canvasAgency'), {
             type: 'bar',
             data: { labels: Object.keys(dataA), datasets: [{ data: Object.values(dataA), backgroundColor: '#1976d2' }] },
-            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, title: { display: true, text: 'CLAIMS BY AGENCY', ...style } }, scales: { x: { grid: { display: false } }, y: hide } }
+            options: { 
+                responsive: true, 
+                maintainAspectRatio: false,
+                layout: { padding: layoutPadding },
+                plugins: { 
+                    legend: { display: false }, 
+                    title: { display: true, text: 'CLAIMS BY AGENCY', ...style },
+                    datalabels: { anchor: 'end', align: 'top', offset: 2, color: '#444', font: { weight: 'bold' } }
+                }, 
+                scales: { x: { grid: { display: false } }, y: hide } 
+            }
         });
 
         charts.extra = new Chart(document.getElementById('canvasExtra'), {
             type: 'bar',
             data: { labels: Object.keys(dataE), datasets: [{ data: Object.values(dataE), backgroundColor: '#008542' }] },
-            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, title: { display: true, text: 'EXTRA CHARGE DETAILS', ...style } }, scales: { x: { grid: { display: false } }, y: hide } }
+            options: { 
+                responsive: true, 
+                maintainAspectRatio: false,
+                layout: { padding: layoutPadding },
+                plugins: { 
+                    legend: { display: false }, 
+                    title: { display: true, text: 'EXTRA CHARGE DETAILS', ...style },
+                    datalabels: { anchor: 'end', align: 'top', offset: 2, color: '#444', font: { weight: 'bold' } }
+                }, 
+                scales: { x: { grid: { display: false } }, y: hide } 
+            }
         });
     }
     window.onload = cargar;
