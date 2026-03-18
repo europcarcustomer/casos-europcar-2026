@@ -143,8 +143,18 @@
                         dataE[extra] = (dataE[extra] || 0) + 1;
                         dataQ["Extra Charge"] = (dataQ["Extra Charge"] || 0) + 1;
                     } else {
-                        let mot = d.DESCRIPTION || "Info";
-                        if (mot.toUpperCase() !== "EXTRA CHARGE") dataQ[mot] = (dataQ[mot] || 0) + 1;
+                        // LOGICA PARA UNIFICAR INFO E INFORMATION
+                        let mot = d.DESCRIPTION || "Information";
+                        let motNormalizado = mot.trim();
+                        
+                        // Si es "Info" o "Information" (sin importar mayúsculas), lo forzamos a "Information"
+                        if (motNormalizado.toUpperCase() === "INFO" || motNormalizado.toUpperCase() === "INFORMATION") {
+                            motNormalizado = "Information";
+                        }
+
+                        if (motNormalizado.toUpperCase() !== "EXTRA CHARGE") {
+                            dataQ[motNormalizado] = (dataQ[motNormalizado] || 0) + 1;
+                        }
                     }
                 } else if (tipo.includes("CONGRATS")) c.cong++;
                 else c.req++;
